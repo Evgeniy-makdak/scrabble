@@ -1,102 +1,219 @@
-import random
+from collections import Counter
+from random import shuffle
+from string import hexdigits, punctuation
 
-#   Создаём переменные:
-list_letter = ["а", "б", "в", "г", "д", "е", "ё", "ж", "з", "и", "й", "к", "л", "м", "н", "о", "п", "р", "с", "т", "у",
-               "ф", "х", "ц", "ч", "ш", "щ", "ъ", "ы", "ь", "э", "ю", "я"]
-list_numbers = [8, 2, 4, 2, 4, 8, 1, 1, 2, 5, 1, 4, 4, 3, 5, 10, 4, 5, 5, 5, 4, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 2]
-# ----------------------------------------------------------------------------------------------------------------
-#   Приветствие:
-print("Привет.\nМы начинаем играть в Scrabble.\n\nКак зовут первого игрока?")
-player_1 = input()
-print("Как зовут второго игрока?")
-player_2 = input()
-print(f"{player_1} vs {player_2}\n(раздаю случайные буквы)")
-# ----------------------------------------------------------------------------------------------------------------
-#   Реализуем случайную выборку 7 букв из list_letter:
-
-list_1 = "".join(random.sample(list_letter, 7))
-list_2 = "".join(random.sample(list_letter, 7))
-print(player_1, "- буквы", list_1)
-print(player_2, "- буквы", list_2)
-# ----------------------------------------------------------------------------------------------------------------
-#   Выгружаем данные в список из файла ru_word.txt
-possible_words = []
+LETTERS_DATA = {
+    "а": (8, 1), "б": (2, 3), "в": (4, 1), "г": (2, 3), "д": (4, 2), "е": (8, 1),
+    "ё": (1, 3), "ж": (1, 5), "з": (2, 5), "и": (5, 1), "й": (1, 4), "к": (4, 2),
+    "л": (4, 2), "м": (3, 2), "н": (5, 1), "о": (10, 1), "п": (4, 2), "р": (5, 1),
+    "с": (5, 1), "т": (5, 1), "у": (4, 2), "ф": (1, 10), "х": (1, 5), "ц": (1, 5),
+    "ч": (1, 5), "ш": (1, 8), "щ": (1, 10), "ъ": (1, 10), "ы": (2, 4), "ь": (2, 3),
+    "э": (1, 8), "ю": (1, 8), "я": (2, 3)
+}
+SCORE = {3: 3, 4: 6, 5: 7, 6: 8, 7: 9}  # 7 letters = 9 points
+STOP_WORDS = ('close', 'quit', 'stop')
+game_letters = {letter: data[0] for letter, data in LETTERS_DATA.items() if data[0] > 0}
 
 
-def get_words():
-    with open('ru_word.txt', encoding='utf-8') as file:
-        for line in file:
-            possible_words.append(line.rstrip('\n'))
-    return possible_words
-
-
-#   эмуляция хода первого игрока:
-
-while True:
-    score_1 = 0
-    count_letters_in_answer_1 = 0
-    print("ходит", player_1)
-    answer_1 = input(f"{player_1}, составь слово из предложенных букв : ")
-    for letter in str(list_1):
-        if (letter in answer_1):
-            count_letters_in_answer_1 += 1
-    if len(answer_1) == count_letters_in_answer_1:
-        get_words()
-        if answer_1 in possible_words:
-            if len(answer_1) == 3:
-                score_1 += 3
-            elif len(answer_1) == 4:
-                score_1 += 6
-            elif len(answer_1) == 5:
-                score_1 += 7
-            elif len(answer_1) == 6:
-                score_1 += 8
-            print(f"Такое слово есть. {player_1} получает {score_1} баллов.")
-            break
-        else:
-            new_letter = "".join(random.sample(list_letter, 1))
-            list_1 = list_1 + new_letter
-            print(f"Такого слова нет.\n{player_1} не получает очков.\nДобавляем букву {list_1}")
-            print(f"ход игрока {player_2}")
-            break
+def add_player_score(game_score: dict, player_name: str, player_score: int) -> None:
+    """
+    Adds points to the player.
+    """
+    if player_name not in game_score:
+        game_score[player_name] = player_score
 
     else:
-        new_letter = "".join(random.sample(list_letter, 1))
-        list_1 = list_1 + new_letter
-        print(f"Такого слова нет.\n{player_1} не получает очков.\nДобавляем букву "
-              f"{list_1}")
-        print(f"ход игрока {player_2}")
-    # ----------------------------------------------------------------------------------------------------------------
-    #   эмуляция хода второго игрока:
+        game_score[player_name] += player_score
 
-    count_letters_in_answer_2 = 0
-    score_2 = 0
-    answer_2 = input(f"{player_2}, составь слово из предложенных букв : ")
-    for letter in str(list_2):
-        if (letter in answer_2):
-            count_letters_in_answer_2 += 1
-    if len(answer_2) == count_letters_in_answer_2:
-        get_words()
-        if answer_2 in possible_words:
-            if len(answer_2) == 3:
-                score_2 += 3
-            elif len(answer_2) == 4:
-                score_2 += 6
-            elif len(answer_2) == 5:
-                score_2 += 7
-            elif len(answer_2) == 6:
-                score_2 += 8
-            print(f"Такое слово есть. {player_2} получает {score_2} баллов.")
-            break
-        else:
-            new_letter = "".join(random.sample(list_letter, 1))
-            list_2 = list_2 + new_letter
-            print(f"Такого слова нет.\n{player_2} не получает очков.\nДобавляем букву{list_2}")
-            print(f"ход игрока {player_1}")
-            break
+
+def get_all_words(filepath: str) -> list:
+    """
+    Gets a list of all words for the game.
+    """
+    with open(filepath, 'r', encoding='utf-8') as fh:
+        all_words = list(map(lambda word: word.strip(), fh.readlines()))
+        return all_words
+
+
+def get_player_answer(player_name: str, player_letters) -> str:
+    """
+    Handles player input as required.
+    """
+    while True:
+        print('Напишите слово или нажмите Ввод чтобы пропустить ход:')
+        player_answ = input('>>> ').strip().lower()
+        incorrect_chars = any(list(filter(lambda ch: ch in hexdigits or ch in punctuation, player_answ)))
+        extra_letter = any(list(filter(lambda ch: ch not in player_letters, player_answ)))
+
+        if player_answ in STOP_WORDS:
+            return player_answ
+
+        elif incorrect_chars:
+            print(f'{player_name} введите слово используя только кирилицу.\n')
+            continue
+
+        elif extra_letter:
+            print(f'{player_name}, можно использовать только те буквы, которые Вам выпали при раздаче.\n')
+            continue
+
+        return player_answ
+
+
+def get_player_points(player_answer: str):
+    """
+    Calculates user points.
+    """
+
+    letter_points = 0
+
+    for ltr in player_answer:
+        letter_points += LETTERS_DATA[ltr][1]
+
+    player_score = SCORE[len(player_answer)] + letter_points
+
+    return player_score
+
+
+def get_uniq_letters(ltr_count: int) -> list:
+    """
+    Gets unique letters for the player.
+    """
+    available_letters = []
+
+    for i in range(ltr_count):
+        all_letters = list(game_letters.keys())
+        shuffle(all_letters)
+
+        ltr = all_letters.pop()
+
+        available_letters.append(ltr)
+        game_letters[ltr] -= 1
+
+        if not game_letters[ltr]:
+            del game_letters[ltr]
+
+    return available_letters
+
+
+def is_correct_word(word: str, letters: list) -> bool:
+    """
+    Checks the word of the player with requirements.
+    """
+    if len(word) > len(letters):
+        return False
+
+    ltrs_in_word = Counter(word)
+    player_ltrs = Counter(letters)
+
+    for ltr, cnt in ltrs_in_word.items():
+        if cnt > player_ltrs[ltr]:
+            return False
+
+    return True
+
+
+def remove_old_letters(word: str, letters: list) -> None:
+    """
+    Removes used letters from the game.
+    """
+    for ltr in word:
+        letters.remove(ltr)
+
+
+def show_score(player_1: str, player_2: str, game_score: dict) -> None:
+    """
+    Prints game results to console.
+    """
+    player_1_score = game_score.get(player_1, 0)
+    player_2_score = game_score.get(player_2, 0)
+
+    if not game_score:
+        print('\nСпасибо за игру, до встречи!')
+
+    elif player_1_score > player_2_score:
+        print(f'\nПоздравляем, выигрывает {player_1}.\nСчёт ', end='')
+        print(f'{player_1_score} : {player_2_score}')
+        print('\nСпасибо за игру, до скорой встречи!')
+
+    elif player_1_score < player_2_score:
+        print(f'\nПоздравляем, выигрывает {player_2}.\nСчёт ', end='')
+        print(f'{player_1_score} : {player_2_score}')
+        print('\nСпасибо за игру, до скорой встречи!')
 
     else:
-        new_letter = "".join(random.sample(list_letter, 1))
-        list_2 = list_2 + new_letter
-        print(f"Такого слова нет.\n{player_2} не получает очков.\nДобавляем букву{list_2}")
-# ----------------------------------------------------------------------------------------------------------------
+        print(f'\n{player_1} и {player_2} поздравляем с ничьёй!\nСчёт ', end='')
+        print(f'{player_1_score} : {player_2_score}')
+        print('\nСпасибо за игру, до скорой встречи!')
+
+
+def main():
+    letters_count = 7
+
+    print('Привет.\nМы начинаем играть в Scrabble\n')
+    print('Как зовут первого игрока?')
+    player_1 = input('>>> ')
+
+    print('\nКак зовут второго игрока?')
+    player_2 = input('>>> ')
+
+    print(f'\n{player_1} vs {player_2}\n(раздаю случайные буквы)\n')
+
+    player_1_letters = get_uniq_letters(letters_count)
+    player_2_letters = get_uniq_letters(letters_count)
+
+    print(f'{player_1} - буквы \"{", ".join(player_1_letters)}\"')
+    print(f'{player_2} - буквы \"{", ".join(player_2_letters)}\"')
+
+    run = True
+    step = 0
+    game_score = {}
+
+    while run:
+        new_ltrs_cnt = 1
+        current_player = player_1 if not step % 2 else player_2
+        current_player_letters = player_1_letters if not step % 2 else player_2_letters
+        step += 1
+
+        print(f'\nХодит {current_player} - буквы: \"{", ".join(current_player_letters)}\"')
+        player_answer = get_player_answer(current_player, current_player_letters)
+
+        if player_answer in STOP_WORDS:
+            run = False
+            show_score(player_1, player_2, game_score)
+            continue
+
+        cor_player_word = is_correct_word(player_answer, current_player_letters)
+
+        if cor_player_word and player_answer in ALL_WORDS:
+            remove_old_letters(player_answer, current_player_letters)
+
+            new_ltrs_cnt += len(player_answer)
+
+            if new_ltrs_cnt > sum(game_letters.values()):
+                new_ltrs_cnt = sum(game_letters.values())
+
+            new_ltrs = get_uniq_letters(new_ltrs_cnt)
+            current_player_letters.extend(new_ltrs)
+
+            player_score = get_player_points(player_answer)
+            add_player_score(game_score, current_player, player_score)
+
+            print('Такое слово есть.')
+            print(f'{current_player} получает {player_score} баллов.')
+
+        else:
+            print('Такого слова нет.')
+
+            new_ltrs = get_uniq_letters(new_ltrs_cnt)
+            current_player_letters.extend(new_ltrs)
+
+        if not game_letters:
+            run = False
+            show_score(player_1, player_2, game_score)
+
+
+if __name__ == '__main__':
+    ALL_WORDS_DB = 'ru_word.txt'
+    ALL_WORDS = get_all_words(ALL_WORDS_DB)
+
+    main()
